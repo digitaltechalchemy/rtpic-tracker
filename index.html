@@ -1,0 +1,997 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>April Acceleration Tracker — RTPIC</title>
+<style>
+  :root {
+    --dg: #18442B;
+    --dg2: #1D5236;
+    --g: #49654C;
+    --or: #FAC090;
+    --iv: #E8E0C5;
+    --sa: #A4BDBA;
+    --wh: #FFFFFF;
+    --bg: #F7F5F0;
+    --bd: rgba(0,0,0,0.08);
+    --bd2: rgba(0,0,0,0.15);
+    --tx: #1A1A1A;
+    --tx2: #5A6B5D;
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: var(--bg);
+    color: var(--tx);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--dg);
+    color: var(--wh);
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .header-logo {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--g);
+    border: 1.5px solid var(--or);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--or);
+    letter-spacing: 0.03em;
+  }
+
+  .header-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+
+  .header-sub {
+    font-size: 11px;
+    color: var(--sa);
+    margin-top: 1px;
+  }
+
+  .header-nav {
+    display: flex;
+    gap: 4px;
+  }
+
+  .nav-btn {
+    padding: 6px 14px;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.15s;
+    background: transparent;
+    color: var(--sa);
+  }
+
+  .nav-btn.active {
+    background: var(--or);
+    color: var(--dg);
+    font-weight: 600;
+  }
+
+  .nav-btn:hover:not(.active) {
+    background: rgba(255,255,255,0.1);
+    color: var(--wh);
+  }
+
+  .main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; }
+
+  .card {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1.25rem;
+  }
+
+  .section-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--tx2);
+    margin-bottom: 0.75rem;
+  }
+
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 1.25rem;
+  }
+
+  .stat-card {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 1rem;
+    text-align: center;
+  }
+
+  .stat-num {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--dg);
+    display: block;
+    line-height: 1.1;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: var(--tx2);
+    margin-top: 4px;
+  }
+
+  .progress-bar-wrap {
+    background: var(--bg);
+    border-radius: 100px;
+    height: 8px;
+    overflow: hidden;
+    margin: 6px 0 2px;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    border-radius: 100px;
+    background: var(--dg);
+    transition: width 0.4s ease;
+  }
+
+  .progress-bar-fill.on-track { background: var(--g); }
+  .progress-bar-fill.behind { background: #c07a40; }
+  .progress-bar-fill.complete { background: var(--dg); }
+
+  .member-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .member-card {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+
+  .member-card:hover {
+    border-color: var(--bd2);
+    transform: translateY(-1px);
+  }
+
+  .member-card.selected {
+    border: 2px solid var(--dg);
+  }
+
+  .member-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+  }
+
+  .avatar {
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .member-info { flex: 1; min-width: 0; }
+
+  .member-name {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--tx);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .member-shop {
+    font-size: 11px;
+    color: var(--tx2);
+  }
+
+  .member-count {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--dg);
+    white-space: nowrap;
+  }
+
+  .member-count span {
+    font-size: 12px;
+    color: var(--tx2);
+    font-weight: 400;
+  }
+
+  .streak-dots {
+    display: flex;
+    gap: 3px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+
+  .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--bg);
+    border: 0.5px solid var(--bd);
+  }
+
+  .dot.done { background: var(--g); border-color: var(--g); }
+  .dot.today { background: var(--or); border-color: #c07a40; }
+
+  .timeline-wrap {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .timeline-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .cal-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+
+  .cal-day-label {
+    text-align: center;
+    font-size: 10px;
+    font-weight: 500;
+    color: var(--tx2);
+    padding-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .cal-day {
+    aspect-ratio: 1;
+    border-radius: var(--radius-sm);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    border: 0.5px solid var(--bd);
+    background: var(--bg);
+    color: var(--tx2);
+    position: relative;
+  }
+
+  .cal-day.has-product {
+    background: #EAF3DE;
+    border-color: #97C459;
+    color: #27500A;
+    font-weight: 500;
+  }
+
+  .cal-day.today {
+    border: 2px solid var(--dg);
+    color: var(--dg);
+    font-weight: 600;
+    background: var(--wh);
+  }
+
+  .cal-day.past { opacity: 0.5; }
+
+  .cal-badge {
+    font-size: 9px;
+    font-weight: 700;
+    color: var(--g);
+    line-height: 1;
+  }
+
+  .my-view-grid {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+  }
+
+  .log-entry-form {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1.25rem;
+  }
+
+  .field-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--tx2);
+    margin-bottom: 5px;
+    display: block;
+  }
+
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    border: 0.5px solid var(--bd2);
+    font-size: 13px;
+    font-family: inherit;
+    background: var(--bg);
+    color: var(--tx);
+    outline: none;
+    margin-bottom: 10px;
+  }
+
+  input[type=text]:focus, input[type=number]:focus, select:focus, textarea:focus {
+    border-color: var(--dg);
+    background: var(--wh);
+  }
+
+  textarea { resize: vertical; min-height: 64px; }
+
+  .btn {
+    padding: 9px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+
+  .btn-primary {
+    background: var(--dg);
+    color: var(--or);
+    width: 100%;
+  }
+
+  .btn-primary:hover { background: var(--dg2); }
+
+  .btn-danger {
+    background: transparent;
+    color: #A32D2D;
+    border: 0.5px solid #F09595;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+
+  .btn-danger:hover { background: #FCEBEB; }
+
+  .products-list {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    overflow: hidden;
+  }
+
+  .product-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr auto;
+    align-items: center;
+    padding: 10px 14px;
+    border-bottom: 0.5px solid var(--bd);
+    gap: 12px;
+    font-size: 13px;
+  }
+
+  .product-row:last-child { border-bottom: none; }
+
+  .product-row.header-row {
+    background: var(--bg);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--tx2);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 7px 14px;
+  }
+
+  .status-badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 100px;
+    white-space: nowrap;
+  }
+
+  .status-live { background: #EAF3DE; color: #27500A; }
+  .status-building { background: #FAEEDA; color: #633806; }
+  .status-idea { background: #F1EFE8; color: #5F5E5A; }
+
+  .big-number {
+    font-size: 48px;
+    font-weight: 700;
+    color: var(--dg);
+    line-height: 1;
+  }
+
+  .goal-progress {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1.5rem;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .days-remaining {
+    font-size: 12px;
+    color: var(--tx2);
+    margin-top: 6px;
+  }
+
+  .ring-wrap {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 12px;
+  }
+
+  .ring-wrap svg { transform: rotate(-90deg); }
+
+  .ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .overall-bar-row {
+    display: grid;
+    grid-template-columns: 100px 1fr 40px;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 13px;
+  }
+
+  .member-mini {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .avatar-sm {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 8px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--dg);
+    color: var(--or);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    font-weight: 500;
+    z-index: 999;
+    transform: translateY(80px);
+    opacity: 0;
+    transition: all 0.3s;
+  }
+
+  .toast.show {
+    transform: translateY(0);
+    opacity: 1;
+  }
+
+  .member-select-wrap {
+    background: var(--wh);
+    border-radius: var(--radius);
+    border: 0.5px solid var(--bd);
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .member-chip {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1px solid var(--bd2);
+    background: var(--bg);
+    color: var(--tx2);
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .member-chip.active {
+    background: var(--dg);
+    color: var(--or);
+    border-color: var(--dg);
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--tx2);
+    font-size: 13px;
+  }
+
+  @media (max-width: 700px) {
+    .stat-grid { grid-template-columns: repeat(2, 1fr); }
+    .my-view-grid { grid-template-columns: 1fr; }
+    .product-row { grid-template-columns: 1fr auto; }
+    .product-row > :nth-child(2), .product-row > :nth-child(3) { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-brand">
+    <div class="header-logo">DTA</div>
+    <div>
+      <div class="header-title">April Acceleration</div>
+      <div class="header-sub">Rising Tides Passive Income Club · 20 products by Apr 30</div>
+    </div>
+  </div>
+  <div class="header-nav">
+    <button class="nav-btn active" onclick="showView('dashboard')">Dashboard</button>
+    <button class="nav-btn" onclick="showView('myview')">My Progress</button>
+  </div>
+</header>
+
+<div class="main">
+
+  <div id="view-dashboard" class="view active">
+
+    <div class="stat-grid" id="dash-stats"></div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.25rem;">
+
+      <div class="card">
+        <div class="section-title">Club leaderboard</div>
+        <div id="leaderboard-rows"></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">April calendar — products live</div>
+        <div class="cal-grid" id="cal-grid"></div>
+      </div>
+
+    </div>
+
+    <div class="card" style="margin-bottom:1.25rem;">
+      <div class="section-title">Member progress</div>
+      <div class="member-grid" id="member-cards"></div>
+    </div>
+
+  </div>
+
+  <div id="view-myview" class="view">
+
+    <div class="member-select-wrap">
+      <span style="font-size:12px;font-weight:500;color:var(--tx2);">I am:</span>
+      <div id="member-chips"></div>
+    </div>
+
+    <div class="my-view-grid" id="my-content" style="display:none">
+
+      <div>
+        <div class="goal-progress card" style="margin-bottom:1.25rem;">
+          <div class="ring-wrap">
+            <svg width="120" height="120" viewBox="0 0 120 120">
+              <circle cx="60" cy="60" r="50" fill="none" stroke="#E8E0C5" stroke-width="10"/>
+              <circle id="ring-fill" cx="60" cy="60" r="50" fill="none" stroke="#18442B" stroke-width="10"
+                stroke-linecap="round" stroke-dasharray="314" stroke-dashoffset="314"/>
+            </svg>
+            <div class="ring-center">
+              <div class="big-number" id="my-count">0</div>
+              <div style="font-size:11px;color:var(--tx2);">of 20</div>
+            </div>
+          </div>
+          <div style="font-weight:500;font-size:14px;" id="my-name-display">Your products</div>
+          <div class="days-remaining" id="days-left"></div>
+          <div style="width:100%;margin-top:12px;">
+            <div class="progress-bar-wrap" style="height:6px;">
+              <div class="progress-bar-fill" id="my-bar" style="width:0%"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="log-entry-form">
+          <div class="section-title">Log a product</div>
+          <label class="field-label">Product name</label>
+          <input type="text" id="prod-name" placeholder="e.g. Etsy Launch Checklist" />
+          <label class="field-label">Status</label>
+          <select id="prod-status">
+            <option value="live">Live on Etsy</option>
+            <option value="building">Building</option>
+            <option value="idea">Idea / planned</option>
+          </select>
+          <label class="field-label">Niche</label>
+          <input type="text" id="prod-niche" placeholder="e.g. Etsy sellers, planners..." />
+          <label class="field-label">Date listed (if live)</label>
+          <input type="text" id="prod-date" placeholder="Apr 1" />
+          <label class="field-label">Notes (optional)</label>
+          <textarea id="prod-notes" placeholder="Price, format, bundle idea..."></textarea>
+          <button class="btn btn-primary" onclick="addProduct()">Add product</button>
+        </div>
+      </div>
+
+      <div>
+        <div style="margin-bottom:0.75rem;display:flex;align-items:center;justify-content:space-between;">
+          <div class="section-title" style="margin:0">My products</div>
+          <div style="font-size:12px;color:var(--tx2);" id="my-product-count"></div>
+        </div>
+        <div class="products-list">
+          <div class="product-row header-row">
+            <div>Product</div>
+            <div>Niche</div>
+            <div>Status</div>
+            <div></div>
+          </div>
+          <div id="my-products-list"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div id="no-member-selected" class="card" style="text-align:center;padding:2.5rem;">
+      <div style="font-size:24px;margin-bottom:8px;color:var(--sa);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="display:inline-block;vertical-align:middle;">
+          <circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/>
+        </svg>
+      </div>
+      <div style="font-weight:500;margin-bottom:4px;">Select your name above to get started</div>
+      <div style="font-size:12px;color:var(--tx2);">Your progress is saved privately and shared to the club dashboard</div>
+    </div>
+
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MEMBERS = [
+  { id: 'ashley', name: 'Ashley', shop: 'The Capable Mama', initials: 'AC', color: '#E1F5EE', textColor: '#085041' },
+  { id: 'sue',    name: 'Sue',    shop: 'WinrocNH',          initials: 'SW', color: '#FAEEDA', textColor: '#633806' },
+  { id: 'sheila', name: 'Sheila', shop: 'Golden Cove Digital',initials: 'SG', color: '#E6F1FB', textColor: '#0C447C' },
+  { id: 'nisha',  name: 'Nisha',  shop: 'Digital Pink Petal', initials: 'ND', color: '#FBEAF0', textColor: '#72243E' },
+  { id: 'jen',    name: 'Jen',    shop: 'RTPIC Member',       initials: 'JN', color: '#EAF3DE', textColor: '#27500A' },
+  { id: 'kayla',  name: 'Kayla',  shop: 'RTPIC Member',       initials: 'KY', color: '#EEEDFE', textColor: '#3C3489' },
+  { id: 'ben',    name: 'Ben',    shop: 'RTPIC Member',       initials: 'BN', color: '#FAECE7', textColor: '#712B13' },
+  { id: 'bella',  name: 'Bella',  shop: 'RTPIC Member',       initials: 'BL', color: '#F1EFE8', textColor: '#444441' },
+  { id: 'joe',    name: 'Joe',    shop: 'Digital Tech Alchemy',initials: 'JW', color: '#E8E0C5', textColor: '#18442B' },
+];
+
+const GOAL = 20;
+const APRIL_DAYS = 30;
+const TODAY = new Date();
+const IS_APRIL = TODAY.getMonth() === 3;
+const CUR_DAY = IS_APRIL ? TODAY.getDate() : 15;
+
+let currentMember = null;
+let allData = {};
+
+async function loadAll() {
+  for (const m of MEMBERS) {
+    try {
+      const r = await window.storage.get('products_' + m.id, true);
+      allData[m.id] = r ? JSON.parse(r.value) : [];
+    } catch(e) {
+      allData[m.id] = [];
+    }
+  }
+  renderDashboard();
+}
+
+async function saveMyData() {
+  if (!currentMember) return;
+  try {
+    await window.storage.set('products_' + currentMember, JSON.stringify(allData[currentMember] || []), true);
+  } catch(e) {}
+}
+
+function getLiveCount(memberId) {
+  return (allData[memberId] || []).filter(p => p.status === 'live').length;
+}
+
+function getTotalCount(memberId) {
+  return (allData[memberId] || []).length;
+}
+
+function getPace() {
+  const totalLive = MEMBERS.reduce((s, m) => s + getLiveCount(m.id), 0);
+  const totalGoal = MEMBERS.length * GOAL;
+  const daysGone = Math.max(1, CUR_DAY);
+  const pctTime = daysGone / APRIL_DAYS;
+  const needed = Math.round(totalGoal * pctTime);
+  return { totalLive, totalGoal, needed, pctTime };
+}
+
+function renderDashboard() {
+  const { totalLive, totalGoal, needed } = getPace();
+  const totalBuilding = MEMBERS.reduce((s, m) => s + (allData[m.id] || []).filter(p => p.status === 'building').length, 0);
+  const daysLeft = APRIL_DAYS - CUR_DAY;
+  const clubPct = Math.round((totalLive / totalGoal) * 100);
+
+  document.getElementById('dash-stats').innerHTML = `
+    <div class="stat-card">
+      <span class="stat-num">${totalLive}</span>
+      <div class="stat-label">Products live</div>
+      <div class="progress-bar-wrap"><div class="progress-bar-fill on-track" style="width:${Math.min(100, clubPct)}%"></div></div>
+      <div style="font-size:10px;color:var(--tx2);margin-top:2px;">${clubPct}% of ${totalGoal} goal</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">${totalBuilding}</span>
+      <div class="stat-label">In progress</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">${daysLeft}</span>
+      <div class="stat-label">Days left in April</div>
+    </div>
+    <div class="stat-card">
+      <span class="stat-num">${MEMBERS.filter(m => getLiveCount(m.id) >= GOAL).length}</span>
+      <div class="stat-label">Members at goal</div>
+    </div>
+  `;
+
+  const sorted = [...MEMBERS].sort((a,b) => getLiveCount(b.id) - getLiveCount(a.id));
+  document.getElementById('leaderboard-rows').innerHTML = sorted.map((m, i) => {
+    const live = getLiveCount(m.id);
+    const pct = Math.min(100, Math.round((live / GOAL) * 100));
+    const track = live >= needed / MEMBERS.length ? 'on-track' : 'behind';
+    return `
+      <div class="overall-bar-row">
+        <div class="member-mini">
+          <div class="avatar-sm" style="background:${m.color};color:${m.textColor};">${m.initials}</div>
+          <span style="font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${m.name}</span>
+        </div>
+        <div>
+          <div class="progress-bar-wrap" style="margin:0;">
+            <div class="progress-bar-fill ${live>=GOAL?'complete':track}" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div style="font-size:12px;font-weight:500;text-align:right;color:var(--dg);">${live}/${GOAL}</div>
+      </div>
+    `;
+  }).join('');
+
+  renderCalendar();
+  renderMemberCards();
+}
+
+function renderCalendar() {
+  const days = ['S','M','T','W','T','F','S'];
+  const apr1 = new Date(2025, 3, 1);
+  const startDay = new Date(TODAY.getFullYear(), 3, 1).getDay();
+
+  const allProducts = Object.values(allData).flat();
+  const byDay = {};
+  allProducts.forEach(p => {
+    if (p.status === 'live' && p.date) {
+      const d = parseInt(p.date.replace(/\D/g, ''));
+      if (d >= 1 && d <= 30) byDay[d] = (byDay[d] || 0) + 1;
+    }
+  });
+
+  let html = days.map(d => `<div class="cal-day-label">${d}</div>`).join('');
+  for (let i = 0; i < startDay; i++) html += '<div></div>';
+  for (let d = 1; d <= 30; d++) {
+    const count = byDay[d] || 0;
+    const isToday = d === CUR_DAY && IS_APRIL;
+    const isPast = d < CUR_DAY;
+    html += `<div class="cal-day ${count > 0 ? 'has-product' : ''} ${isToday ? 'today' : ''} ${isPast && !isToday ? 'past' : ''}">
+      <span>${d}</span>
+      ${count > 0 ? `<span class="cal-badge">+${count}</span>` : ''}
+    </div>`;
+  }
+  document.getElementById('cal-grid').innerHTML = html;
+}
+
+function renderMemberCards() {
+  document.getElementById('member-cards').innerHTML = MEMBERS.map(m => {
+    const live = getLiveCount(m.id);
+    const total = getTotalCount(m.id);
+    const pct = Math.min(100, Math.round((live / GOAL) * 100));
+    const products = allData[m.id] || [];
+    const dots = Array.from({length: GOAL}, (_, i) => {
+      if (i < live) return '<div class="dot done"></div>';
+      return '<div class="dot"></div>';
+    }).join('');
+    return `
+      <div class="member-card">
+        <div class="member-header">
+          <div class="avatar" style="background:${m.color};color:${m.textColor};">${m.initials}</div>
+          <div class="member-info">
+            <div class="member-name">${m.name}</div>
+            <div class="member-shop">${m.shop}</div>
+          </div>
+          <div class="member-count">${live}<span>/${GOAL}</span></div>
+        </div>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar-fill ${live >= GOAL ? 'complete' : pct >= Math.round((CUR_DAY/APRIL_DAYS)*100) ? 'on-track' : 'behind'}" style="width:${pct}%"></div>
+        </div>
+        <div style="font-size:10px;color:var(--tx2);margin-top:4px;margin-bottom:6px;">${pct}% complete · ${total - live} in progress</div>
+        <div class="streak-dots">${dots}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderMyView() {
+  if (!currentMember) return;
+  const m = MEMBERS.find(x => x.id === currentMember);
+  const products = allData[currentMember] || [];
+  const live = products.filter(p => p.status === 'live').length;
+  const pct = Math.min(100, Math.round((live / GOAL) * 100));
+  const daysLeft = APRIL_DAYS - CUR_DAY;
+
+  document.getElementById('my-name-display').textContent = m.name + "'s products";
+  document.getElementById('my-count').textContent = live;
+  document.getElementById('days-left').textContent = daysLeft + ' days left · need ' + Math.max(0, GOAL - live) + ' more';
+  document.getElementById('my-bar').style.width = pct + '%';
+  document.getElementById('my-product-count').textContent = products.length + ' logged';
+
+  const circumference = 2 * Math.PI * 50;
+  const offset = circumference - (pct / 100) * circumference;
+  document.getElementById('ring-fill').style.strokeDashoffset = offset;
+
+  const statusMap = { live: 'Live on Etsy', building: 'Building', idea: 'Planned' };
+  const badgeMap = { live: 'status-live', building: 'status-building', idea: 'status-idea' };
+
+  const listEl = document.getElementById('my-products-list');
+  if (products.length === 0) {
+    listEl.innerHTML = '<div class="empty-state">No products logged yet — add your first one!</div>';
+  } else {
+    listEl.innerHTML = products.map((p, i) => `
+      <div class="product-row">
+        <div>
+          <div style="font-weight:500;font-size:13px;">${p.name}</div>
+          ${p.notes ? `<div style="font-size:11px;color:var(--tx2);">${p.notes}</div>` : ''}
+        </div>
+        <div style="font-size:12px;color:var(--tx2);">${p.niche || '—'}</div>
+        <div><span class="status-badge ${badgeMap[p.status]}">${statusMap[p.status]}</span></div>
+        <div><button class="btn btn-danger" onclick="removeProduct(${i})">✕</button></div>
+      </div>
+    `).join('');
+  }
+}
+
+function addProduct() {
+  if (!currentMember) return;
+  const name = document.getElementById('prod-name').value.trim();
+  if (!name) { showToast('Enter a product name'); return; }
+  const product = {
+    name,
+    status: document.getElementById('prod-status').value,
+    niche: document.getElementById('prod-niche').value.trim(),
+    date: document.getElementById('prod-date').value.trim(),
+    notes: document.getElementById('prod-notes').value.trim(),
+    added: new Date().toISOString()
+  };
+  if (!allData[currentMember]) allData[currentMember] = [];
+  allData[currentMember].unshift(product);
+  saveMyData();
+  renderMyView();
+  renderDashboard();
+  document.getElementById('prod-name').value = '';
+  document.getElementById('prod-niche').value = '';
+  document.getElementById('prod-date').value = '';
+  document.getElementById('prod-notes').value = '';
+  showToast('Product logged!');
+}
+
+function removeProduct(idx) {
+  if (!currentMember) return;
+  allData[currentMember].splice(idx, 1);
+  saveMyData();
+  renderMyView();
+  renderDashboard();
+  showToast('Removed');
+}
+
+function selectMember(id) {
+  currentMember = id;
+  document.querySelectorAll('.member-chip').forEach(c => c.classList.remove('active'));
+  document.querySelector(`[data-id="${id}"]`).classList.add('active');
+  document.getElementById('my-content').style.display = 'grid';
+  document.getElementById('no-member-selected').style.display = 'none';
+  renderMyView();
+}
+
+function renderMemberChips() {
+  document.getElementById('member-chips').innerHTML = MEMBERS.map(m => `
+    <div class="member-chip" data-id="${m.id}" onclick="selectMember('${m.id}')">
+      <div class="avatar-sm" style="background:${m.color};color:${m.textColor};width:18px;height:18px;font-size:7px;">${m.initials}</div>
+      ${m.name}
+    </div>
+  `).join('');
+}
+
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-' + v).classList.add('active');
+  event.target.classList.add('active');
+  if (v === 'dashboard') renderDashboard();
+  if (v === 'myview') renderMyView();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2200);
+}
+
+renderMemberChips();
+loadAll();
+</script>
+</body>
+</html>
